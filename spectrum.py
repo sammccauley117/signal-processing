@@ -12,6 +12,7 @@ parser.add_argument('filename', type=str, help='filename')
 parser.add_argument('-s', '--source', type=str, default='./sounds/', help='The source folder (default: "./sounds/")')
 parser.add_argument('-d', '--destination', type=str, default='./videos/', help='The destination folder (default: "./videos/")')
 parser.add_argument('-o', '--output', type=str, default='spectrum.mp4', help='The output file (default: "spectrum.mp4")')
+parser.add_argument('-l', '--limit', help='Frequency limits. Example: (20, 1000)')
 args = parser.parse_args()
 
 # Determine source and destination path
@@ -41,6 +42,16 @@ for i in range(num_frames):
     fft = fft[:len(fft)//2] # We only want the first half of the fft because the second half is just a mirror
     frames[i] = fft
 
+def parse_limit(s):
+    if not s[0].isdigit(): s = s[1:]
+    if not s[-1].isdigit(): s = s[:-1]
+    s = s.split(',')
+    if len(s) > 1:
+        return (int(s[0]), int(s[1]))
+    if len(s) == 1:
+        return (0, int(s[0]))
+    return (0, sr // 2)
+
 def get_frame(i):
     '''
     Plots each frame of the animation where `i` is the index of the frame
@@ -49,6 +60,8 @@ def get_frame(i):
     plt.xlabel('Frequency')
     plt.ylabel('Amplitude')
     plt.ylim((0, max_value))
+    if args.limit:
+        plt.xlim(parse_limit(args.limit))
     plt.plot(x, frames[i])
 
 # Create and save the animation
